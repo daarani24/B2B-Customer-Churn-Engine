@@ -28,3 +28,25 @@ class PredictionLog(Base):
 def init_db():
     if engine:
         Base.metadata.create_all(bind=engine)
+
+def log_prediction(model_used: str, input_type: str, prediction: int, probability: float):
+    if not SessionLocal:
+        return None
+    db = SessionLocal()
+    try:
+        log_entry = PredictionLog(
+            model_used=model_used,
+            input_type=input_type,
+            prediction=prediction,
+            probability=probability
+        )
+        db.add(log_entry)
+        db.commit()
+        db.refresh(log_entry)
+        return log_entry
+    except Exception as e:
+        db.rollback()
+        print(f"Error logging to database: {e}")
+        return None
+    finally:
+        db.close()

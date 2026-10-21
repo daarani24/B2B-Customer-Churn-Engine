@@ -1,9 +1,13 @@
 fastapi
 uvicorn
-streamlit
+pydantic
 pandas
-numpy
 scikit-learn
 xgboost
 joblib
+streamlit
 requests
+python-dotenv
+sqlalchemy
+psycopg2-binary
+python-multipart
