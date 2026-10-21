@@ -1,5 +1,6 @@
-import streamlit as st
+import os
 import requests
+import streamlit as st
 
 st.set_page_config(
     page_title="Customer Churn Prediction",
@@ -16,8 +17,13 @@ st.write(
     """
 )
 
-# API Configuration
-API_URL = "http://127.0.0.1:8000/predict"
+BACKEND_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:8000")
+API_SECRET_KEY = os.getenv("API_SECRET_KEY", "")
+
+if not API_SECRET_KEY:
+    st.warning("⚠️ API_SECRET_KEY is not set. Requests may fail authentication.")
+
+API_URL = f"{BACKEND_URL}/predict"
 
 st.header("Select Machine Learning Model")
 
@@ -92,8 +98,10 @@ if st.button("Predict"):
         "total": total
     }
 
+    headers = {"X-API-Key": API_SECRET_KEY}
+
     try:
-        response = requests.post(API_URL, json=payload)
+        response = requests.post(API_URL, json=payload, headers=headers)
         if response.status_code == 200:
             result = response.json()
             
@@ -105,6 +113,6 @@ if st.button("Predict"):
             else:
                 st.success(f"✅ **Customer is NOT likely to Churn.** (Risk Probability: {result['churn_probability']}%)")
         else:
-            st.error(f"API Error: {response.text}")
+            st.error(f"API Error ({response.status_code}): {response.text}")
     except Exception as e:
-        st.error(f"Failed to connect to FastAPI backend: {e}")
+        st.error(f"Failed to connect to FastAPI backend at {API_URL}: {e}")
