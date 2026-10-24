@@ -129,8 +129,8 @@ Submit customer attributes to evaluate churn probability.
 Clone the repository and set up environment variables:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/b2b-customer-churn-engine.git
-cd b2b-customer-churn-engine
+git clone https://github.com/daarani24/B2B-customer-churn-engine.git
+cd B2B-customer-churn-engine
 cp .env.example .env
 ```
 
@@ -176,7 +176,7 @@ All inference outputs automatically record an audit trail to Neon PostgreSQL via
 ## 📂 Project Structure
 
 ```text
-b2b-customer-churn-engine/
+B2B-customer-churn-engine/
 │
 ├── backend/
 │   ├── main.py              # FastAPI app, authentication, Pydantic schemas
