@@ -158,3 +158,7 @@ async def predict_batch(file: UploadFile = File(...), model_name: str = "XGBoost
     log_prediction(model_name, "batch", int(raw_df["churn_prediction"].sum()), float(probs.mean() * 100))
 
     return raw_df.to_dict(orient="records")
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
