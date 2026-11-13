@@ -2,10 +2,14 @@
 
 [![CI Pipeline](https://github.com/daarani24/B2B-Customer-Churn-Engine/actions/workflows/ci.yml/badge.svg)](https://github.com/daarani24/B2B-Customer-Churn-Engine/actions)
 
-**Live demo:** https://churn-engine.streamlit.app
-(The backend runs on a free tier, so the first prediction may take up to a minute to wake up.)
+## 🚀 Live Demo
 
-An end-to-end, containerized machine learning platform built to predict enterprise customer churn and protect Monthly Recurring Revenue (MRR). The platform features a trained XGBoost pipeline, a secure FastAPI REST backend with custom API key authentication, automated cloud logging via SQLAlchemy to Neon PostgreSQL, and an interactive Streamlit UI.
+- **Dashboard:** https://churn-engine.streamlit.app
+- **API docs (Swagger):** https://churn-engine-api-uk21.onrender.com/docs
+
+> The backend runs on a free tier, so the first request may take up to a minute to wake up.
+
+An end-to-end, containerized machine learning platform built to predict enterprise customer churn and protect Monthly Recurring Revenue (MRR). The platform features a trained XGBoost pipeline, a secure FastAPI REST backend with custom API key authentication, automated cloud logging via SQLAlchemy to Neon PostgreSQL, and an interactive Streamlit UI. The backend is deployed on Render and the dashboard on Streamlit Community Cloud.
 
 ---
 
@@ -18,13 +22,13 @@ An end-to-end, containerized machine learning platform built to predict enterpri
              │ 1. Account attributes input
              ▼
 ┌─────────────────────────┐
-│  STREAMLIT UI (:8501)   │
+│ STREAMLIT UI (Cloud)    │
 │    dashboard/app.py     │
 └────────────┬────────────┘
              │ 2. HTTP POST /predict (Header: X-API-Key)
              ▼
 ┌────────────────────────────────────────────────────────┐
-│                 FASTAPI BACKEND (:8000)                │
+│                 FASTAPI BACKEND (Render)               │
 │                     backend/main.py                    │
 │                                                        │
 │  - Authenticate X-API-Key                              │
@@ -40,6 +44,8 @@ An end-to-end, containerized machine learning platform built to predict enterpri
 └─────────────────────────┘   └──────────────────────────┘
 ```
 
+> Running locally with Docker Compose, the dashboard is served on port `8501` and the backend on port `8000`.
+
 ---
 
 ## 🛠️ Tech Stack
@@ -51,7 +57,9 @@ An end-to-end, containerized machine learning platform built to predict enterpri
 | **Database & ORM** | Neon PostgreSQL (Cloud), SQLAlchemy ORM |
 | **Security** | Custom Header Auth (`X-API-Key`), Git-ignored `.env` secret management |
 | **Frontend UI** | Streamlit, Requests |
+| **Testing & CI** | Pytest, GitHub Actions |
 | **DevOps & Containers** | Docker, Docker Compose, Git |
+| **Deployment** | Render (FastAPI backend), Streamlit Community Cloud (dashboard) |
 
 ---
 
@@ -78,6 +86,16 @@ An end-to-end, containerized machine learning platform built to predict enterpri
 ---
 
 ## 📡 API Reference
+
+### Endpoints
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `GET` | `/health` | No | Health check, returns `{"status": "ok"}` |
+| `POST` | `/predict` | `X-API-Key` | Predict churn for a single customer |
+| `POST` | `/predict-batch` | `X-API-Key` | Predict churn for multiple customers |
+
+Interactive documentation is available at `/docs`.
 
 ### Headers
 ```http
@@ -126,14 +144,26 @@ Submit customer attributes to evaluate churn probability.
 
 ---
 
-## 🚀 Quickstart Guide
+## 🔐 Environment Variables
+
+Real values are never committed. Use `.env` locally and the hosting dashboards in production.
+
+| Variable | Used by | Purpose |
+|---|---|---|
+| `DATABASE_URL` | Backend | Neon PostgreSQL connection string (include `?sslmode=require`) |
+| `API_SECRET_KEY` | Backend and dashboard | Authenticates requests through the `X-API-Key` header |
+| `BACKEND_URL` | Dashboard | Base URL of the backend, without a trailing slash |
+
+---
+
+## 🚀 Quickstart Guide (Local)
 
 ### 1. Environment Configuration
 Clone the repository and set up environment variables:
 
 ```bash
-git clone https://github.com/daarani24/B2B-customer-churn-engine.git
-cd B2B-customer-churn-engine
+git clone https://github.com/daarani24/B2B-Customer-Churn-Engine.git
+cd B2B-Customer-Churn-Engine
 cp .env.example .env
 ```
 
@@ -160,6 +190,29 @@ To stop services:
 docker compose down
 ```
 
+### 3. Run Tests
+```bash
+pip install -r requirements.txt
+pytest
+```
+
+---
+
+## ☁️ Cloud Deployment
+
+| Component | Platform | Notes |
+|---|---|---|
+| FastAPI backend | **Render** (Web Service, Docker) | Built from the root `Dockerfile`; set `DATABASE_URL` and `API_SECRET_KEY` as environment variables |
+| Streamlit dashboard | **Streamlit Community Cloud** | Main file `dashboard/app.py`; set `BACKEND_URL` and `API_SECRET_KEY` in app Secrets |
+| Database | **Neon PostgreSQL** | Serverless Postgres; the `prediction_logs` table stores every prediction |
+
+**Deploy your own copy:**
+1. Create a Neon database and copy its connection string.
+2. Create a Render Web Service from this repo (Docker runtime) and add `DATABASE_URL` and `API_SECRET_KEY`. Confirm `https://<your-service>.onrender.com/health` responds.
+3. Create a Streamlit Community Cloud app with `dashboard/app.py` as the main file, then add `BACKEND_URL` (the Render URL) and the same `API_SECRET_KEY` as secrets.
+
+The dashboard installs only the packages listed in `dashboard/requirements.txt`, so deployment builds stay fast.
+
 ---
 
 ## 🗄️ Database Schema (`prediction_logs`)
@@ -179,18 +232,22 @@ All inference outputs automatically record an audit trail to Neon PostgreSQL via
 ## 📂 Project Structure
 
 ```text
-B2B-customer-churn-engine/
+B2B-Customer-Churn-Engine/
+│
+├── .github/
+│   └── workflows/
+│       └── ci.yml           # GitHub Actions CI pipeline
 │
 ├── backend/
-│   ├── main.py              # FastAPI app, authentication, Pydantic schemas
+│   ├── main.py              # FastAPI app, authentication, Pydantic schemas, /health
 │   └── database.py          # SQLAlchemy ORM, Neon DB connection, logging functions
 │
 ├── dashboard/
-│   └── app.py               # Streamlit UI with dynamic backend routing
+│   ├── app.py               # Streamlit UI with dynamic backend routing
+│   └── requirements.txt     # Lightweight dependencies for Streamlit Cloud
 │
 ├── data/
-│   ├── raw/                 # Raw Telco CSV dataset
-│   └── processed/           # Feature engineered arrays
+│   └── processed/           # Cleaned customer churn dataset (CSV)
 │
 ├── models/
 │   ├── xgboost_model.pkl    # Production model binary
@@ -202,11 +259,16 @@ B2B-customer-churn-engine/
 ├── notebooks/
 │   └── Customer_Churn_Analysis.ipynb # EDA, preprocessing, model benchmarking
 │
+├── tests/
+│   └── test_api.py          # Pytest API tests
+│
 ├── Dockerfile               # Service container definition
 ├── docker-compose.yml       # Multi-service stack specification
+├── pytest.ini               # Pytest configuration
 ├── .env.example             # Safe environment variable template
 ├── .gitignore               # Configured secret & binary exclusion
-├── requirements.txt         # Python dependencies
+├── requirements.txt         # Python dependencies (pinned ML libraries)
+├── LICENSE
 └── README.md
 ```
 
