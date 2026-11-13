@@ -2,6 +2,9 @@
 
 [![CI Pipeline](https://github.com/daarani24/B2B-Customer-Churn-Engine/actions/workflows/ci.yml/badge.svg)](https://github.com/daarani24/B2B-Customer-Churn-Engine/actions)
 
+**Live demo:** https://churn-engine.streamlit.app
+(The backend runs on a free tier, so the first prediction may take up to a minute to wake up.)
+
 An end-to-end, containerized machine learning platform built to predict enterprise customer churn and protect Monthly Recurring Revenue (MRR). The platform features a trained XGBoost pipeline, a secure FastAPI REST backend with custom API key authentication, automated cloud logging via SQLAlchemy to Neon PostgreSQL, and an interactive Streamlit UI.
 
 ---
